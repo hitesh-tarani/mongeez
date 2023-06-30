@@ -1,5 +1,6 @@
 /*
  * Copyright 2011 SecondMarket Labs, LLC.
+ * Copyright 2023 Hitesh Tarani
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,44 +14,27 @@
 package org.mongeez.dao;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.mongeez.MongoAuth;
 import org.mongeez.commands.ChangeSet;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
-import com.mongodb.MongoCredential;
 import com.mongodb.QueryBuilder;
 import com.mongodb.WriteConcern;
 
 public class MongeezDao {
     private DB db;
     private List<ChangeSetAttribute> changeSetAttributes;
+    private ShellScriptExecutor executor;
 
-    public MongeezDao(Mongo mongo, String databaseName) {
-        this(mongo, databaseName, null);
-    }
-
-    public MongeezDao(Mongo mongo, String databaseName, MongoAuth auth) {
-        final List<MongoCredential> credentials = new LinkedList<MongoCredential>();
-
-        if (auth != null) {
-            if (auth.getAuthDb() == null || auth.getAuthDb().equals(databaseName)) {
-                credentials.add(MongoCredential.createCredential(auth.getUsername(), databaseName, auth.getPassword().toCharArray()));
-            } else {
-                credentials.add(MongoCredential.createCredential(auth.getUsername(), auth.getAuthDb(), auth.getPassword().toCharArray()));
-            }
-        }
-
-        final MongoClient client = new MongoClient(mongo.getServerAddressList(),  credentials);
-        db = client.getDB(databaseName);
+    public MongeezDao(MongoClient client, String dbName, ShellScriptExecutor shellScriptExecutor) {
+        db = client.getDB(dbName);
+        executor = shellScriptExecutor;
         configure();
     }
 
@@ -131,8 +115,8 @@ public class MongeezDao {
         return db.getCollection("mongeez");
     }
 
-    public void runScript(String code) {
-        db.eval(code);
+    public void runScript(String filePath) {
+        executor.runScript(filePath);
     }
 
     public void logChangeSet(ChangeSet changeSet) {

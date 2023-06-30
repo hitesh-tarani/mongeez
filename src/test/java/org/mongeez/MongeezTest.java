@@ -1,5 +1,6 @@
 /*
  * Copyright 2011 SecondMarket Labs, LLC.
+ * Copyright 2023 Hitesh Tarani
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +16,7 @@ package org.mongeez;
 import static org.testng.Assert.assertEquals;
 
 import com.mongodb.DB;
-import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import org.mongeez.validation.ValidationException;
 import org.springframework.core.io.ClassPathResource;
@@ -26,13 +26,14 @@ import org.testng.annotations.Test;
 @Test
 public class MongeezTest {
     private String dbName = "test_mongeez";
-    private Mongo mongo;
+    private MongoClient mongoClient;
+    private String mongoUri = "mongodb://localhost/"+dbName;
     private DB db;
 
     @BeforeMethod
     protected void setUp() throws Exception {
-        mongo = new Mongo();
-        db = mongo.getDB(dbName);
+        mongoClient = new MongoClient();
+        db = mongoClient.getDB(dbName);
 
         db.dropDatabase();
     }
@@ -40,8 +41,9 @@ public class MongeezTest {
     private Mongeez create(String path) {
         Mongeez mongeez = new Mongeez();
         mongeez.setFile(new ClassPathResource(path));
-        mongeez.setMongo(mongo);
-        mongeez.setDbName(dbName);
+        mongeez.setMongoClient(mongoClient);
+        mongeez.setMongoUri(mongoUri);
+        mongeez.setMongeezCollectionDB(dbName);
         return mongeez;
     }
 
@@ -73,7 +75,7 @@ public class MongeezTest {
         assertEquals(db.getCollection("mongeez").count(), 2);
     }
 
-    @Test(groups = "dao", expectedExceptions = com.mongodb.MongoCommandException.class)
+    @Test(groups = "dao", expectedExceptions = com.mongodb.MongoException.class)
     public void testFailOnError_True() throws Exception {
         Mongeez mongeez = create("mongeez_fail_fail.xml");
         mongeez.process();

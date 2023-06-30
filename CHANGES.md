@@ -1,5 +1,9 @@
 # Mongeez #
 
+### Version 0.10.0 ###
+* Change Mongo script executor to mongo shell, which also needs temporary files to be created before execution
+* Updating mongo java driver
+
 ### Version 0.9.6 ###
 * added context parsing to formatted javascript changesets [#54](https://github.com/mongeez/mongeez/pull/54)
 

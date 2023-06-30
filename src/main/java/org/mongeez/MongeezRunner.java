@@ -1,5 +1,6 @@
 /*
  * Copyright 2011 SecondMarket Labs, LLC.
+ * Copyright 2023 Hitesh Tarani
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -11,9 +12,8 @@
  */
 package org.mongeez;
 
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 
@@ -27,13 +27,9 @@ import org.mongeez.validation.DefaultChangeSetsValidator;
  */
 public class MongeezRunner implements InitializingBean {
     private boolean executeEnabled = false;
-    private Mongo mongo;
+    private MongoClient mongo;
     private String dbName;
     private Resource file;
-
-    private String userName;
-    private String passWord;
-    private String authDb;
     
     private ChangeSetFileProvider changeSetFileProvider;
 
@@ -48,8 +44,8 @@ public class MongeezRunner implements InitializingBean {
 
     public void execute() {
         Mongeez mongeez = new Mongeez();
-        mongeez.setMongo(mongo);
-        mongeez.setDbName(dbName);
+        mongeez.setMongoClient(mongo);
+        mongeez.setMongeezCollectionDB(dbName);
         
         if(changeSetsValidator != null) {
             mongeez.setChangeSetsValidator(changeSetsValidator);
@@ -62,11 +58,6 @@ public class MongeezRunner implements InitializingBean {
             mongeez.setChangeSetFileProvider(changeSetFileProvider);
         } else {
             mongeez.setFile(file);
-
-            if(!StringUtils.isEmpty(userName) && !StringUtils.isEmpty(passWord)){
-            	MongoAuth auth = new MongoAuth(userName, passWord, authDb);
-                mongeez.setAuth(auth);
-            }
         }
 
         mongeez.process();
@@ -80,11 +71,11 @@ public class MongeezRunner implements InitializingBean {
         this.executeEnabled = executeEnabled;
     }
 
-    public void setMongo(Mongo mongo) {
+    public void setMongoClient(MongoClient mongo) {
         this.mongo = mongo;
     }
 
-    public void setDbName(String dbName) {
+    public void setMongeezCollectionDB(String dbName) {
         this.dbName = dbName;
     }
 
@@ -98,17 +89,5 @@ public class MongeezRunner implements InitializingBean {
 
     public String getDbName() {
         return dbName;
-    }
-
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
-
-	public void setPassWord(String passWord) {
-		this.passWord = passWord;
-	}
-
-    public void setAuthDb(String authDb) {
-        this.authDb = authDb;
     }
 }

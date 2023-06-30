@@ -1,5 +1,6 @@
 /*
  * Copyright 2011 SecondMarket Labs, LLC.
+ * Copyright 2023 Hitesh Tarani
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,6 +13,7 @@
 
 package org.mongeez;
 
+import com.mongodb.MongoClientURI;
 import org.mongeez.commands.ChangeSet;
 import org.mongeez.commands.Script;
 import org.mongeez.reader.ChangeSetFileProvider;
@@ -20,7 +22,7 @@ import org.mongeez.reader.FilesetXMLChangeSetFileProvider;
 import org.mongeez.validation.ChangeSetsValidator;
 import org.mongeez.validation.DefaultChangeSetsValidator;
 
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,16 +35,25 @@ import java.util.List;
 public class Mongeez {
     private final static Logger logger = LoggerFactory.getLogger(Mongeez.class);
 
-    private Mongo mongo = null;
     private String dbName;
-    private MongoAuth auth = null;
     private ChangeSetFileProvider changeSetFileProvider = null;
     private ChangeSetsValidator changeSetsValidator = new DefaultChangeSetsValidator();
     private String context = null;
+    private MongoClient mongoClient;
+    private String mongoClientUri;
+
+  public void executeAllChanges() {
+        List<ChangeSet> changeSets = getChangeSets();
+        new ChangeSetExecutor(mongoClient, mongoClientUri, context, dbName).execute(changeSets);
+    }
 
     public void process() {
         List<ChangeSet> changeSets = getChangeSets();
-        new ChangeSetExecutor(mongo, dbName, context, auth).execute(changeSets);
+        new ChangeSetExecutor(mongoClient, mongoClientUri, context, dbName).execute(changeSets);
+    }
+
+    public void verifyAllChanges() {
+        getChangeSets();
     }
 
     private List<ChangeSet> getChangeSets() {
@@ -75,16 +86,17 @@ public class Mongeez {
         }
     }
 
-    public void setMongo(Mongo mongo) {
-        this.mongo = mongo;
+    public void setMongoClient(MongoClient mongoClient) {
+        this.mongoClient = mongoClient;
+    }
+  
+    public void setMongoUri(String mongoUri) {
+        this.mongoClient = new MongoClient(new MongoClientURI(mongoUri));
+        this.mongoClientUri = mongoUri;
     }
 
-    public void setDbName(String dbName) {
+    public void setMongeezCollectionDB(String dbName) {
         this.dbName = dbName;
-    }
-
-    public void setAuth(MongoAuth auth) {
-        this.auth = auth;
     }
 
     public void setChangeSetsValidator(ChangeSetsValidator changeSetsValidator) {
