@@ -17,7 +17,7 @@ import org.mongeez.commands.ChangeSet;
 import org.mongeez.commands.Script;
 import org.mongeez.dao.MongeezDao;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import org.mongeez.dao.MongoShellScriptExecutor;
 import org.mongeez.dao.ShellScriptExecutor;
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ public class ChangeSetExecutor {
     /**
      * This executes scripts with a {@link org.mongeez.dao.MongoShellScriptExecutor} which needs
      * <a href="https://www.mongodb.com/docs/v4.4/mongo/">mongo shell client</a> executable available on the system path.
-     * To use the alternative mongo shells, use {@link ChangeSetExecutor#ChangeSetExecutor(com.mongodb.MongoClient, java.lang.String, java.lang.String, org.mongeez.dao.ShellScriptExecutor)}
+     * To use the alternative mongo shells, use {@link ChangeSetExecutor#ChangeSetExecutor(com.mongodb.client.MongoClient, java.lang.String, java.lang.String, org.mongeez.dao.ShellScriptExecutor)}
      */
     public ChangeSetExecutor(MongoClient mongo, String mongoClientUri, String context, String dbName) {
         dao = new MongeezDao(mongo, dbName, new MongoShellScriptExecutor(mongoClientUri));

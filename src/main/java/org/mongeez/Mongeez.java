@@ -13,7 +13,7 @@
 
 package org.mongeez;
 
-import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoClients;
 import org.mongeez.commands.ChangeSet;
 import org.mongeez.commands.Script;
 import org.mongeez.reader.ChangeSetFileProvider;
@@ -22,7 +22,7 @@ import org.mongeez.reader.FilesetXMLChangeSetFileProvider;
 import org.mongeez.validation.ChangeSetsValidator;
 import org.mongeez.validation.DefaultChangeSetsValidator;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +91,7 @@ public class Mongeez {
     }
   
     public void setMongoUri(String mongoUri) {
-        this.mongoClient = new MongoClient(new MongoClientURI(mongoUri));
+        this.mongoClient = MongoClients.create(mongoUri);
         this.mongoClientUri = mongoUri;
     }
 

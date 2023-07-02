@@ -12,7 +12,7 @@
  */
 package org.mongeez;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;

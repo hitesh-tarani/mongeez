@@ -15,9 +15,10 @@ package org.mongeez;
 
 import static org.testng.Assert.assertEquals;
 
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
 import org.mongeez.validation.ValidationException;
 import org.springframework.core.io.ClassPathResource;
 import org.testng.annotations.BeforeMethod;
@@ -28,14 +29,14 @@ public class MongeezTest {
     private String dbName = "test_mongeez";
     private MongoClient mongoClient;
     private String mongoUri = "mongodb://localhost/"+dbName;
-    private DB db;
+    private MongoDatabase db;
 
     @BeforeMethod
     protected void setUp() throws Exception {
-        mongoClient = new MongoClient();
-        db = mongoClient.getDB(dbName);
+        mongoClient = MongoClients.create();
+        db = mongoClient.getDatabase(dbName);
 
-        db.dropDatabase();
+        db.drop();
     }
 
     private Mongeez create(String path) {
@@ -53,10 +54,10 @@ public class MongeezTest {
 
         mongeez.process();
 
-        assertEquals(db.getCollection("mongeez").count(), 5);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 5);
 
-        assertEquals(db.getCollection("organization").count(), 2);
-        assertEquals(db.getCollection("user").count(), 2);
+        assertEquals(db.getCollection("organization").countDocuments(), 2);
+        assertEquals(db.getCollection("user").countDocuments(), 2);
     }
 
     @Test(groups = "dao")
@@ -67,12 +68,12 @@ public class MongeezTest {
 
     @Test(groups = "dao")
     public void testFailOnError_False() throws Exception {
-        assertEquals(db.getCollection("mongeez").count(), 0);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 0);
 
         Mongeez mongeez = create("mongeez_fail.xml");
         mongeez.process();
 
-        assertEquals(db.getCollection("mongeez").count(), 2);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 2);
     }
 
     @Test(groups = "dao", expectedExceptions = com.mongodb.MongoException.class)
@@ -86,22 +87,22 @@ public class MongeezTest {
         Mongeez mongeez = create("mongeez_empty.xml");
         mongeez.process();
 
-        assertEquals(db.getCollection("mongeez").count(), 1);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 1);
     }
 
     @Test(groups = "dao")
     public void testNoFailureOnEmptyChangeLog() throws Exception {
-        assertEquals(db.getCollection("mongeez").count(), 0);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 0);
 
         Mongeez mongeez = create("mongeez_empty_changelog.xml");
         mongeez.process();
 
-        assertEquals(db.getCollection("mongeez").count(), 1);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 1);
     }
 
     @Test(groups = "dao", expectedExceptions = ValidationException.class)
     public void testNoFailureOnNoChangeFilesBlock() throws Exception {
-        assertEquals(db.getCollection("mongeez").count(), 0);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 0);
 
         Mongeez mongeez = create("mongeez_no_changefiles_declared.xml");
         mongeez.process();
@@ -109,43 +110,43 @@ public class MongeezTest {
 
     @Test(groups = "dao")
     public void testChangesWContextContextNotSet() throws Exception {
-        assertEquals(db.getCollection("mongeez").count(), 0);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 0);
 
         Mongeez mongeez = create("mongeez_contexts.xml");
         mongeez.process();
-        assertEquals(db.getCollection("mongeez").count(), 2);
-        assertEquals(db.getCollection("car").count(), 2);
-        assertEquals(db.getCollection("user").count(), 0);
-        assertEquals(db.getCollection("organization").count(), 0);
-        assertEquals(db.getCollection("house").count(), 0);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 2);
+        assertEquals(db.getCollection("car").countDocuments(), 2);
+        assertEquals(db.getCollection("user").countDocuments(), 0);
+        assertEquals(db.getCollection("organization").countDocuments(), 0);
+        assertEquals(db.getCollection("house").countDocuments(), 0);
     }
 
     @Test(groups = "dao")
     public void testChangesWContextContextSetToUsers() throws Exception {
-        assertEquals(db.getCollection("mongeez").count(), 0);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 0);
 
         Mongeez mongeez = create("mongeez_contexts.xml");
         mongeez.setContext("users");
         mongeez.process();
-        assertEquals(db.getCollection("mongeez").count(), 4);
-        assertEquals(db.getCollection("car").count(), 2);
-        assertEquals(db.getCollection("user").count(), 2);
-        assertEquals(db.getCollection("organization").count(), 0);
-        assertEquals(db.getCollection("house").count(), 2);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 4);
+        assertEquals(db.getCollection("car").countDocuments(), 2);
+        assertEquals(db.getCollection("user").countDocuments(), 2);
+        assertEquals(db.getCollection("organization").countDocuments(), 0);
+        assertEquals(db.getCollection("house").countDocuments(), 2);
     }
 
     @Test(groups = "dao")
     public void testChangesWContextContextSetToOrganizations() throws Exception {
-        assertEquals(db.getCollection("mongeez").count(), 0);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 0);
 
         Mongeez mongeez = create("mongeez_contexts.xml");
         mongeez.setContext("organizations");
         mongeez.process();
-        assertEquals(db.getCollection("mongeez").count(), 4);
-        assertEquals(db.getCollection("car").count(), 2);
-        assertEquals(db.getCollection("user").count(), 0);
-        assertEquals(db.getCollection("organization").count(), 2);
-        assertEquals(db.getCollection("house").count(), 2);
+        assertEquals(db.getCollection("mongeez").countDocuments(), 4);
+        assertEquals(db.getCollection("car").countDocuments(), 2);
+        assertEquals(db.getCollection("user").countDocuments(), 0);
+        assertEquals(db.getCollection("organization").countDocuments(), 2);
+        assertEquals(db.getCollection("house").countDocuments(), 2);
     }
 
     @Test(groups = "dao", expectedExceptions = ValidationException.class)

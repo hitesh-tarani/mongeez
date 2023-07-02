@@ -16,24 +16,25 @@ package org.mongeez.dao;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.mongeez.commands.ChangeSet;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.QueryBuilder;
-import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 
 public class MongeezDao {
-    private DB db;
+    private final MongoDatabase db;
     private List<ChangeSetAttribute> changeSetAttributes;
-    private ShellScriptExecutor executor;
+    private final ShellScriptExecutor executor;
 
     public MongeezDao(MongoClient client, String dbName, ShellScriptExecutor shellScriptExecutor) {
-        db = client.getDB(dbName);
+        db = client.getDatabase(dbName);
         executor = shellScriptExecutor;
         configure();
     }
@@ -46,28 +47,28 @@ public class MongeezDao {
     }
 
     private void addTypeToUntypedRecords() {
-        DBObject q = new QueryBuilder().put("type").exists(false).get();
-        BasicDBObject o = new BasicDBObject("$set", new BasicDBObject("type", RecordType.changeSetExecution.name()));
-        getMongeezCollection().update(q, o, false, true, WriteConcern.SAFE);
+        Bson q = Filters.exists("type", false);
+        Bson o = Updates.set("type", RecordType.changeSetExecution.name());
+        getMongeezCollection().updateMany(q, o);
     }
 
     private void loadConfigurationRecord() {
-        DBObject q = new QueryBuilder().put("type").is(RecordType.configuration.name()).get();
-        DBObject configRecord = getMongeezCollection().findOne(q);
+        Bson q = Filters.eq("type",RecordType.configuration.name());
+        Document configRecord = getMongeezCollection().find(q).first();
         if (configRecord == null) {
-            if (getMongeezCollection().count() > 0L) {
+            if (getMongeezCollection().countDocuments() > 0L) {
                 // We have pre-existing records, so don't assume that they support the latest features
                 configRecord =
-                        new BasicDBObject()
+                        new Document()
                                 .append("type", RecordType.configuration.name())
                                 .append("supportResourcePath", false);
             } else {
                 configRecord =
-                        new BasicDBObject()
+                        new Document()
                                 .append("type", RecordType.configuration.name())
                                 .append("supportResourcePath", true);
             }
-            getMongeezCollection().insert(configRecord, WriteConcern.SAFE);
+            getMongeezCollection().insertOne(configRecord);
         }
         Object supportResourcePath = configRecord.get("supportResourcePath");
 
@@ -85,8 +86,8 @@ public class MongeezDao {
      */
     private void dropObsoleteChangeSetExecutionIndices() {
         String indexName = "type_changeSetExecution_file_1_changeId_1_author_1_resourcePath_1";
-        DBCollection collection = getMongeezCollection();
-        for (DBObject dbObject : collection.getIndexInfo()) {
+        MongoCollection<Document> collection = getMongeezCollection();
+        for (Document dbObject : collection.listIndexes()) {
             if (indexName.equals(dbObject.get("name"))) {
                 collection.dropIndex(indexName);
             }
@@ -108,10 +109,10 @@ public class MongeezDao {
         for (ChangeSetAttribute attribute : changeSetAttributes) {
             query.append(attribute.name(), attribute.getAttributeValue(changeSet));
         }
-        return getMongeezCollection().count(query) > 0;
+        return getMongeezCollection().countDocuments(query) > 0;
     }
 
-    private DBCollection getMongeezCollection() {
+    private MongoCollection<Document> getMongeezCollection() {
         return db.getCollection("mongeez");
     }
 
@@ -120,12 +121,12 @@ public class MongeezDao {
     }
 
     public void logChangeSet(ChangeSet changeSet) {
-        BasicDBObject object = new BasicDBObject();
+        Document object = new Document();
         object.append("type", RecordType.changeSetExecution.name());
         for (ChangeSetAttribute attribute : changeSetAttributes) {
             object.append(attribute.name(), attribute.getAttributeValue(changeSet));
         }
         object.append("date", DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(System.currentTimeMillis()));
-        getMongeezCollection().insert(object, WriteConcern.SAFE);
+        getMongeezCollection().insertOne(object);
     }
 }
