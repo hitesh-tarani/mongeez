@@ -3,6 +3,7 @@ package org.mongeez.dao;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoServerException;
+import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +70,9 @@ public abstract class AbstractMongoShellScriptExecutor implements ShellScriptExe
     boolean isSuccess = false;
 
     try {
+      if(SystemUtils.IS_OS_WINDOWS) {
+        filePath = filePath.replaceAll("\\\\", "/");
+      }
       sendCommand(mongoProcess, String.format("load(\"%s\")", filePath));
 
       boolean outputFetched = false;

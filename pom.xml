@@ -19,7 +19,7 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com/hitesh-tarani/mongeez.git</connection>
+        <connection>scm:git:git@github.com:hitesh-tarani/mongeez.git</connection>
         <developerConnection>scm:git:git@github.com:hitesh-tarani/mongeez.git</developerConnection>
         <url>https://github.com/hitesh-tarani/mongeez/tree/master/src</url>
     </scm>
@@ -117,6 +117,15 @@
                 </configuration>
             </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>3.0.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
     <distributionManagement>
